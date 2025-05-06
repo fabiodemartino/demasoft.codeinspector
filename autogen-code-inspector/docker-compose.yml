@@ -1,0 +1,122 @@
+services:
+  frontend:
+      build:
+        context: ./frontend
+      container_name: frontend
+      ports:
+        - "3000:3000"
+      networks:
+        - autogen_code_inspector
+      env_file:
+        - ./frontend/.env
+      # Optional volume (enable only after verifying it works)
+      # volumes:
+      #   - ${VOLUME_PATH}/frontend:/app
+  backend:
+    build:
+      context: ./backend
+    container_name: backend
+    ports:
+      - "5000:5000"
+    depends_on:
+      - redis
+    networks:
+      - autogen_code_inspector
+    env_file:
+      - .env
+    volumes:
+      - uploads:${VOLUME_PATH}/app/uploads
+      - extracted:${VOLUME_PATH}/app/extracted
+      - code:${VOLUME_PATH}/app/code
+    environment:
+      - FRONTEND_ORIGIN=${FRONTEND_ORIGIN}
+
+  orchestrator:
+    build:
+      context: ./orchestrator
+      dockerfile: Dockerfile
+    container_name: orchestrator
+    depends_on:
+      - redis
+      - backend
+    networks:
+      - autogen_code_inspector
+    env_file:
+      - .env
+    ports:
+      - "6000:6000"   
+
+
+  celery-worker:
+    build:
+      context: ./celery-worker
+      dockerfile: Dockerfile
+    container_name: celery-worker
+    depends_on:
+      - backend
+      - redis
+    networks:
+      - autogen_code_inspector
+    env_file:
+      - .env
+    command: ./celery_start.sh
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - autogen_code_inspector
+    volumes:
+      - redis_data:/data
+
+  vectordb:
+    image: qdrant/qdrant
+    container_name: vectordb
+    networks:
+      - autogen_code_inspector
+    env_file:
+      - .env
+    volumes:
+      - vector_store:/qdrant/storage
+
+  ollama:
+    image: ollama
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    networks:
+      - autogen_code_inspector
+    env_file:
+      - .env
+    volumes:
+      - ollama_data:/mnt/data/docker/autogen-code-inspector/ollama
+
+  flower:
+    build:
+      context: ./celery-worker
+      dockerfile: Dockerfile
+    container_name: flower
+    depends_on:
+      - redis
+      - backend
+    networks:
+      - autogen_code_inspector
+    env_file:
+      - .env
+    ports:
+      - "5555:5555"
+
+
+volumes:
+  uploads:
+  extracted:
+  code:
+  vector_store:
+  ollama_data:
+  redis_data:
+
+networks:
+  autogen_code_inspector:
+    driver: bridge

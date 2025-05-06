@@ -1,0 +1,4 @@
+flask
+celery
+redis
+# Add other dependencies your orchestrator may require

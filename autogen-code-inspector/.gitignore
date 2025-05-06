@@ -1,0 +1,38 @@
+# Ignore node_modules in all directories
+**/node_modules/
+
+
+# npm logs
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# dotenv environment variables file
+.env
+
+# Next.js build output
+/.next/
+
+# Vercel and Netlify deployments
+/.vercel/
+/.netlify/
+
+# Logs
+logs
+*.log
+*.log.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE/editor directories
+.vscode/
+.idea/
+
+# Test coverage reports
+coverage/
+
+# Temporary files
+*.swp
+*.swo
